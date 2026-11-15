@@ -1,4 +1,4 @@
-# <img src="public/prematch-clock.svg" width="48" height="48" align="middle" alt=""> PreMatch
+# <img src="public/prematch-clock.svg" width="48" height="48" align="absmiddle" alt=""> PreMatch
 
 [Open PreMatch](https://prematch-app.vercel.app/)
 
