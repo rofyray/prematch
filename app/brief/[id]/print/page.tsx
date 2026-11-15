@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import SavedBrief from "../../../components/SavedBrief";
+export const metadata: Metadata = { title: "PreMatch Brief" };
 export default async function Page({
   params,
 }: {

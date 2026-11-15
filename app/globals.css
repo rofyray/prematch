@@ -49,8 +49,8 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible {
-  outline: 2px solid var(--rust);
-  outline-offset: 4px;
+  outline: 1px solid var(--rust);
+  outline-offset: -1px;
 }
 h1,
 h2,
@@ -319,8 +319,8 @@ main {
   opacity: 0;
 }
 .purpose label:focus-within {
-  outline: 2px solid var(--rust);
-  outline-offset: 3px;
+  outline: 1px solid var(--rust);
+  outline-offset: -1px;
 }
 .purpose .selected {
   background: var(--green);
@@ -1407,6 +1407,6 @@ footer > .secondary {
   font-size: 11px;
 }
 .runway-detail:focus {
-  outline: 2px solid var(--green);
-  outline-offset: 5px;
+  outline: 1px solid var(--green);
+  outline-offset: -1px;
 }
