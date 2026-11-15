@@ -30,9 +30,11 @@ export async function readEvents(
   try {
     while (true) {
       const { done, value } = await reader.read();
-      buffer += (
-        done ? decoder.decode() : decoder.decode(value, { stream: true })
-      ).replaceAll("\r\n", "\n");
+      buffer += done
+        ? decoder.decode()
+        : decoder.decode(value, { stream: true });
+      // Normalize after joining chunks: a CRLF pair may straddle network reads.
+      buffer = buffer.replaceAll("\r\n", "\n");
       let index;
       while ((index = buffer.indexOf("\n\n")) !== -1) {
         const frame = buffer.slice(0, index);

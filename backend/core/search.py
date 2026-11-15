@@ -44,7 +44,7 @@ async def search(query,run,live=False,**params):
     run.search_tasks[key] = task
     return await task
 
-async def extract(urls,run):
+async def _extract_batch(urls,run):
     urls = list(dict.fromkeys(urls))[:10]
     if not urls:
         return {}
@@ -66,3 +66,16 @@ async def extract(urls,run):
             cached[url] = item.get('raw_content','')[:18000]
             await store.set('tv:x:'+hashlib.sha256(url.encode()).hexdigest(),cached[url],43200)
     return cached
+
+
+async def extract(urls, run):
+    urls = list(dict.fromkeys(urls))[:10]
+    missing = [url for url in urls if url not in run.extract_tasks]
+    if missing:
+        # Register before yielding so parallel claims share the same extraction work.
+        task = asyncio.create_task(_extract_batch(missing, run))
+        for url in missing:
+            run.extract_tasks[url] = task
+    tasks = list(dict.fromkeys(run.extract_tasks[url] for url in urls))
+    batches = await asyncio.gather(*tasks)
+    return {url: text for batch in batches for url, text in batch.items() if url in urls}

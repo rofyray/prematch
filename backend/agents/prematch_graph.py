@@ -5,21 +5,22 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from backend.core import llm, search
 from backend.core.cache import store
-from backend.core.models import Candidates, Plan, Findings, Support, Brief, Item, BriefNumber
+from backend.core.models import Candidates, Plan, Findings, Support, Brief, Item, BriefNumber, BriefRequest, Candidate, Window, Finding, Source
+from backend.core.telemetry import Run
 from backend.core.findings import research_window, clean_findings
 from backend.core.rerank import rerank
 from backend.core.citations import clean_brief
 
 class State(TypedDict, total=False):
-    request: object
-    run: object
-    entity: object
-    candidates: list
-    window: object
-    plan: object
-    findings: list
-    sources: list
-    brief: object
+    request: BriefRequest
+    run: Run
+    entity: Candidate
+    candidates: list[Candidate]
+    window: Window
+    plan: Plan
+    findings: list[Finding]
+    sources: list[Source]
+    brief: Brief
     clarify: bool
 
 async def resolve(state):
@@ -46,16 +47,34 @@ async def plan(state):
     await run.emit('plan.ready',window=state['window'],sections=result.sections)
     return {'plan':result}
 
+async def research_section(section, index, entity, window, run):
+    try:
+        results = await asyncio.gather(*(search.search(q,run,topic='news',start_date=str(window.start),end_date=str(window.end),filter_by_published_date=True,max_results=6) for q in section.queries),return_exceptions=True)
+        sources = rerank([r for rows in results if isinstance(rows,list) for r in rows],[entity.domain] if entity.domain else [],prefix=f's{index}_')
+        return section,sources
+    except Exception:
+        return section,[]
+
+async def extract_findings(section, sources, index, primary, entity, window, run):
+    try:
+        sources = sources+primary[:2]
+        if not sources:
+            raise ValueError('No sources')
+        findings = await llm.call(run,'Overlap','Extract relevant dated findings only from supplied evidence within the date window. Each must include source IDs, date, title, summary, named people and relevant numbers. Do not infer publication dates. Skip unsupported claims.',
+                                  {'section':section.name,'entity':entity.model_dump(),'window':window.model_dump(mode='json'),'sources':[s.model_dump(mode='json') for s in sources]},Findings)
+        for i,finding in enumerate(findings.findings):
+            finding.id = f'f{index}_{i}'
+            finding.section = section.name
+        cleaned = clean_findings(findings.findings,sources,window)
+        await run.emit('section.findings',section=section.name,findings=cleaned)
+        return cleaned
+    except Exception:
+        await run.emit('section.findings',section=section.name,findings=[],reason='Nothing found. This section could not be verified.')
+        return []
+
 async def investigate(state):
-    req,run,entity,window = state['request'],state['run'],state['entity'],state['window']
-    async def research_section(section,index):
-        try:
-            results = await asyncio.gather(*(search.search(q,run,topic='news',start_date=str(window.start),end_date=str(window.end),filter_by_published_date=True,max_results=6) for q in section.queries),return_exceptions=True)
-            sources = rerank([r for rows in results if isinstance(rows,list) for r in rows],[entity.domain] if entity.domain else [],prefix=f's{index}_')
-            return section,sources
-        except Exception:
-            return section,[]
-    groups = await asyncio.gather(*(research_section(s,i) for i,s in enumerate(state['plan'].sections)))
+    run,entity,window = state['run'],state['entity'],state['window']
+    groups = await asyncio.gather(*(research_section(s,i,entity,window,run) for i,s in enumerate(state['plan'].sections)))
     try:
         newsroom = await search.search(f'{entity.name} newsroom updates',run,include_domains=[entity.domain],start_date=str(window.start),end_date=str(window.end),filter_by_published_date=True) if entity.domain else []
         primary = rerank(newsroom,[entity.domain] if entity.domain else [],prefix='primary_')
@@ -66,23 +85,7 @@ async def investigate(state):
     all_sources.update({s.id:s for s in primary})
     for source in all_sources.values():
         source.snippet = extracted.get(str(source.url)) or source.snippet
-    async def overlap(section,sources,index):
-        try:
-            sources = sources+primary[:2]
-            if not sources:
-                raise ValueError('No sources')
-            findings = await llm.call(run,'Overlap','Extract relevant dated findings only from supplied evidence within the date window. Each must include source IDs, date, title, summary, named people and relevant numbers. Do not infer publication dates. Skip unsupported claims.',
-                                      {'section':section.name,'entity':entity.model_dump(),'window':window.model_dump(mode='json'),'sources':[s.model_dump(mode='json') for s in sources]},Findings)
-            for i,finding in enumerate(findings.findings):
-                finding.id = f'f{index}_{i}'
-                finding.section = section.name
-            cleaned = clean_findings(findings.findings,sources,window)
-            await run.emit('section.findings',section=section.name,findings=cleaned)
-            return cleaned
-        except Exception:
-            await run.emit('section.findings',section=section.name,findings=[],reason='Nothing found. This section could not be verified.')
-            return []
-    results = await asyncio.gather(*(overlap(s,sources,i) for i,(s,sources) in enumerate(groups)))
+    results = await asyncio.gather(*(extract_findings(s,sources,i,primary,entity,window,run) for i,(s,sources) in enumerate(groups)))
     sources = list(all_sources.values())
     canonical,aliases = {},{}
     for source in sources:
@@ -106,6 +109,18 @@ async def investigate(state):
     await run.emit('findings.labeled',findings=findings)
     return {'findings':findings,'sources':sources}
 
+def validated_partial(name, rows, allowed):
+    valid = []
+    for row in rows:
+        try:
+            item = (BriefNumber if name == 'numbers' else Item).model_validate(row)
+            if item.source_ids and set(item.source_ids).issubset(allowed):
+                valid.append(item.model_dump(mode='json'))
+        except ValidationError:
+            # Partial JSON can contain unfinished rows; emit only complete, cited items.
+            continue
+    return valid
+
 async def synthesize(state):
     req,run,entity,window = state['request'],state['run'],state['entity'],state['window']
     allowed = {sid for finding in state['findings'] for sid in finding.source_ids}
@@ -115,14 +130,7 @@ async def synthesize(state):
             rows = snapshot.get(name)
             if not isinstance(rows,list):
                 continue
-            valid = []
-            for row in rows:
-                try:
-                    item = (BriefNumber if name == 'numbers' else Item).model_validate(row)
-                    if item.source_ids and set(item.source_ids).issubset(allowed):
-                        valid.append(item.model_dump(mode='json'))
-                except ValidationError:
-                    continue
+            valid = validated_partial(name, rows, allowed)
             signature = json.dumps(valid,sort_keys=True)
             if valid and sent.get(name) != signature:
                 sent[name] = signature

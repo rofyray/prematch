@@ -2,45 +2,41 @@
 import { useEffect, useRef, useState } from "react";
 import { Microphone as Mic } from "@phosphor-icons/react/dist/ssr/Microphone";
 import { Stop as Square } from "@phosphor-icons/react/dist/ssr/Stop";
-import type { WebSession } from "@omnidim-ai/client";
+import { connectVoice } from "../lib/voice-session";
 export default function Voice({ briefId }: { briefId: string }) {
-  const session = useRef<WebSession | null>(null);
+  const connection = useRef<AbortController | null>(null);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [transcript, setTranscript] = useState("");
   useEffect(
     () => () => {
-      session.current?.stop();
+      connection.current?.abort();
     },
-    [],
+    [briefId],
   );
   async function start() {
+    connection.current?.abort();
+    const controller = new AbortController();
+    connection.current = controller;
     setError("");
     setStatus("connecting");
     try {
-      const response = await fetch("/api/py/voice/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief_id: briefId }),
+      await connectVoice(briefId, controller.signal, (current) => {
+        current.on("status", (s) => {
+          if (!controller.signal.aborted)
+            setStatus(typeof s === "string" ? s : "idle");
+        });
+        current.on("transcript", (t) => {
+          if (!controller.signal.aborted)
+            setTranscript(`${t.role === "agent" ? "Coach" : "You"}: ${t.text}`);
+        });
+        current.on("error", () => {
+          if (!controller.signal.aborted)
+            setError("Voice connection interrupted. Try starting again.");
+        });
       });
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.detail || "The voice session could not start.");
-      const { WebSession } = await import("@omnidim-ai/client");
-      const current = new WebSession();
-      session.current = current;
-      current.on("status", (s) =>
-        setStatus(typeof s === "string" ? s : "idle"),
-      );
-      current.on("transcript", (t) =>
-        setTranscript(`${t.role === "agent" ? "Coach" : "You"}: ${t.text}`),
-      );
-      current.on("error", () =>
-        setError("Voice connection interrupted. Try starting again."),
-      );
-      await current.start({ wsUrl: data.connection_url });
     } catch (e) {
-      session.current?.stop();
+      if (controller.signal.aborted) return;
       setStatus("idle");
       setError(
         e instanceof Error
@@ -61,7 +57,7 @@ export default function Voice({ briefId }: { briefId: string }) {
         }
         onClick={() => {
           if (status === "active") {
-            session.current?.stop();
+            connection.current?.abort();
             setStatus("idle");
           } else void start();
         }}

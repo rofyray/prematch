@@ -18,3 +18,48 @@ async def test_ambiguous_entity_stops_before_research(monkeypatch):
     assert result['clarify'] is True
     assert [e[0] for e in events]==['run.started','entity.candidates','clarify.needed','run.completed']
     assert events[-1][1]['needs_clarification'] is True
+
+
+@pytest.mark.asyncio
+async def test_research_keeps_verified_sections_and_filters_streamed_citations(monkeypatch):
+    from datetime import date
+    from unittest.mock import AsyncMock
+    from backend.core.models import Plan,Section,Findings,Finding,Support,Brief,Window,Item
+    meeting=datetime(2026,11,14,tzinfo=timezone.utc)
+    entity=Candidate(name='Example',kind='company',description='Company',domain='example.com',confidence=1)
+    observed=[]
+    saved=AsyncMock()
+    async def search(query,*args,**kwargs):
+        if query=='unavailable':raise RuntimeError('Source unavailable')
+        return [{'url':'https://example.com/news','title':'Product launch','content':'Example launched a product.','published_date':'2026-11-10','score':1}]
+    async def call(run,agent,system,content,schema=None,on_partial=None,**kwargs):
+        if agent=='Assist':return Plan(sections=[Section(name='News',queries=['news']),Section(name='People',queries=['unavailable'])])
+        if agent=='Overlap':
+            if content['section']=='People':raise RuntimeError('Section could not be checked')
+            sid=content['sources'][0]['id']
+            return Findings(findings=[Finding(id='new',section='News',title='Product launch',date=date(2026,11,10),summary='A product launched.',source_ids=[sid])])
+        if agent=='VAR':return Support(supported_ids=[f['id'] for f in content['findings']])
+        if agent=='Golazo':
+            sid=content['findings'][0]['source_ids'][0]
+            snapshot={'headline':[{'text':'Good item','source_ids':[sid]},{'text':'Bad citation','source_ids':['invented']},{'text':'Incomplete'}]}
+            await on_partial(snapshot)
+            await on_partial(snapshot)
+            return Brief(subject='Example',kind='company',meeting_at=meeting,window=Window(start=date(2026,10,15),end=date(2026,11,14)),headline=[Item(text='Good item',source_ids=[sid]),Item(text='Bad citation',source_ids=['invented'])])
+        raise AssertionError(agent)
+    monkeypatch.setattr(pipeline.search,'search',search)
+    monkeypatch.setattr(pipeline.search,'extract',AsyncMock(return_value={}))
+    monkeypatch.setattr(pipeline.llm,'call',call)
+    monkeypatch.setattr(pipeline.store,'set',saved)
+    async def emit(event,data):observed.append((event,data))
+    result=await pipeline.build_brief(BriefRequest(subject='Example',meeting_at=meeting,entity=entity),Run('prematch',emit))
+    brief=result['brief']
+    assert len(brief.headline)==1
+    assert len(brief.sources)==1
+    assert brief.headline[0].source_ids==[brief.sources[0].id]
+    partials=[data for event,data in observed if event=='brief.section' and data['name']=='headline']
+    assert len(partials)==2, 'One deduplicated partial snapshot and one final section'
+    assert len(partials[0]['content'])==1
+    failures=[data for event,data in observed if event=='section.findings' and data['section']=='People']
+    assert failures[0]['findings']==[]
+    assert observed[-1][0]=='run.completed'
+    saved.assert_awaited_once()
