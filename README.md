@@ -16,7 +16,7 @@ flowchart LR
   C --> V[OmniDimension: brief coach]
 ```
 
-Next.js consumes FastAPI server-sent events. LangGraph runs the stages. Bifrost stores configuration and logs in Postgres and semantic cache entries in Redis Stack. This app has its own virtual key, a $15 monthly gateway budget, and a 60-request-per-minute gateway limit. Infrastructure charges are separate.
+Next.js consumes FastAPI server-sent events. LangGraph runs the stages. Bifrost stores configuration and logs in Postgres and semantic cache entries in Redis Stack. This app has its own virtual key, a monthly gateway budget, and a 60-request-per-minute gateway limit. Infrastructure charges are separate.
 
 | Agent   | Responsibility                 | Primary model    | Effort |
 | ------- | ------------------------------ | ---------------- | ------ |
@@ -79,6 +79,4 @@ The brief coach receives only the current brief context. It has no phone number 
 
 Saved briefs are bearer links: anyone with the URL can view them until they expire. There is no account system. Research is limited to six runs per ten minutes and forty per day per client. The print view selects the most useful sections for a compact handout; the full brief remains available on screen. PDF output uses the browser print dialog. Validated synthesis items stream as the model writes the brief. Saved briefs are not continuously refreshed.
 
-Recorded research snapshots are excluded from Git and uploaded separately with the hosted demo. A clean clone hides the example picker when no local recordings exist. Planning, research, design, screenshots and private environment files remain outside version control.
-
-Built with Codex assistance. ByteByteGo's deep-research architecture informed the three-stage approach; reference and design files remain local.
+The hosted demo includes local snapshots. A clean clone works without them and hides the example picker.

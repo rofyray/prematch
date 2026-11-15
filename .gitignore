@@ -10,21 +10,3 @@ __pycache__/
 .env*
 !.env.example
 .DS_Store
-# Private planning, research, design, and validation materials
-/docs/
-/planning/
-/research/
-/designs/
-/assets/
-/evidence/
-PRD.md
-progress.md
-contracts.md
-resources.md
-testing.md
-/features/
-*.dc.html
-.vercel
-
-# Recorded research stays local and is uploaded only with the runnable demo.
-/public/examples/*.json
