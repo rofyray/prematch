@@ -109,10 +109,16 @@ async def investigate(state):
     await run.emit('findings.labeled',findings=findings)
     return {'findings':findings,'sources':sources}
 
-def validated_partial(name, rows, allowed):
+def cited_sources(ids, finding_sources):
+    # Golazo sometimes cites the finding IDs it was given; map each one to that finding's sources.
+    return list(dict.fromkeys(sid for cited in ids for sid in finding_sources.get(cited, [cited])))
+
+def validated_partial(name, rows, allowed, finding_sources=None):
     valid = []
     for row in rows:
         try:
+            if isinstance(row, dict) and isinstance(row.get('source_ids'), list):
+                row = {**row, 'source_ids': cited_sources(row['source_ids'], finding_sources or {})}
             item = (BriefNumber if name == 'numbers' else Item).model_validate(row)
             if item.source_ids and set(item.source_ids).issubset(allowed):
                 valid.append(item.model_dump(mode='json'))
@@ -124,21 +130,25 @@ def validated_partial(name, rows, allowed):
 async def synthesize(state):
     req,run,entity,window = state['request'],state['run'],state['entity'],state['window']
     allowed = {sid for finding in state['findings'] for sid in finding.source_ids}
+    finding_sources = {finding.id: finding.source_ids for finding in state['findings']}
     sent = {}
     async def partial(snapshot):
         for name in ('headline','numbers','what_changed','who_to_know','talking_points','questions','avoid'):
             rows = snapshot.get(name)
             if not isinstance(rows,list):
                 continue
-            valid = validated_partial(name, rows, allowed)
+            valid = validated_partial(name, rows, allowed, finding_sources)
             signature = json.dumps(valid,sort_keys=True)
             if valid and sent.get(name) != signature:
                 sent[name] = signature
                 await run.emit('brief.section',name=name,content=valid)
-    brief = await llm.call(run,'Golazo','Write a concise one-page meeting brief using ONLY the supplied findings. Three headline bullets, up to four numbers, three talking points, and three to five source-backed questions. Every item must have source_ids from its findings. Unconfirmed findings belong only in avoid. Keep the entire brief under 550 words. Tailor questions to the meeting purpose and context. Preserve verified/reported status.',
+    brief = await llm.call(run,'Golazo','Write a concise one-page meeting brief using ONLY the supplied findings. Three headline bullets, up to four numbers, three talking points, and three to five source-backed questions. Every item must have source_ids copied from the source_ids lists of the findings it uses (IDs such as s0_3), never the finding IDs. Unconfirmed findings belong only in avoid. Keep the entire brief under 550 words. Tailor questions to the meeting purpose and context. Preserve verified/reported status.',
                            {'entity':entity.model_dump(),'window':window.model_dump(mode='json'),'meeting_at':req.meeting_at,'with_person':req.with_person,'purpose':req.purpose,'my_context':req.my_context,'findings':[f.model_dump(mode='json') for f in state['findings']]},Brief,on_partial=partial)
     brief.subject,brief.kind = entity.name,entity.kind
     brief.meeting_at,brief.with_person,brief.window = req.meeting_at,req.with_person,window
+    for name in ('headline','numbers','what_changed','who_to_know','talking_points','questions','avoid'):
+        for item in getattr(brief,name):
+            item.source_ids = cited_sources(item.source_ids, finding_sources)
     used = {sid for finding in state['findings'] for sid in finding.source_ids}
     brief = clean_brief(brief,[source for source in state['sources'] if source.id in used])
     for name in ('headline','numbers','what_changed','who_to_know','talking_points','questions','avoid'):
