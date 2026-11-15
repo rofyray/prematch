@@ -180,3 +180,33 @@ async def test_gateway_routes_effort_and_observes_fallback(monkeypatch):
     assert run.telemetry.bifrost.cache_hits==1
     assert run.telemetry.bifrost.fallbacks==1
     assert run.telemetry.calls[0].bifrost_request_id=='request-1'
+
+
+@pytest.mark.asyncio
+async def test_gateway_stream_delivers_partial_before_final(monkeypatch):
+    from types import SimpleNamespace
+    from backend.core import llm
+    from backend.core.telemetry import Run
+    monkeypatch.setenv('BIFROST_URL','https://gateway.example')
+    monkeypatch.setenv('BIFROST_VK','test-key')
+    events=[]
+    class Stream:
+        response=SimpleNamespace(headers={'x-bifrost-request-id':'stream-1'})
+        async def __aenter__(self):return self
+        async def __aexit__(self,*args):pass
+        def __aiter__(self):return self.iterate()
+        async def iterate(self):
+            yield SimpleNamespace(type='input_json',snapshot={'headline':[{'text':'First item','source_ids':['s1']}]})
+        async def get_final_message(self):
+            assert events
+            return SimpleNamespace(model='claude-opus-5-5',usage=SimpleNamespace(input_tokens=10,output_tokens=3),content=[SimpleNamespace(type='text',text='complete')])
+    class Client:
+        def __init__(self,**kwargs):self.messages=SimpleNamespace(stream=lambda **kwargs:Stream())
+        async def close(self):pass
+    monkeypatch.setattr(llm.anthropic,'AsyncAnthropic',Client)
+    async def partial(value):events.append(value)
+    async def emit(*args):pass
+    run=Run('prematch',emit)
+    assert await llm.call(run,'Golazo','Write a brief.',{},on_partial=partial)=='complete'
+    assert events[0]['headline'][0]['text']=='First item'
+    assert run.telemetry.calls[0].bifrost_request_id=='stream-1'

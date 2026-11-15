@@ -77,7 +77,7 @@ Deploy this directory with `vercel deploy --prod` after configuring the server v
 
 The brief coach receives only the current brief context. It has no phone number or outbound-call capability. Microphone access is requested only after the visitor starts voice coaching. The voice SDK is loaded on demand.
 
-Saved briefs are bearer links: anyone with the URL can view them until they expire. There is no account system. Research is limited to six runs per ten minutes and forty per day per client. The print view selects the most useful sections for a compact handout; the full brief remains available on screen. PDF output uses the browser print dialog. Synthesis sections appear after the structured model response completes. Saved briefs are not continuously refreshed.
+Saved briefs are bearer links: anyone with the URL can view them until they expire. There is no account system. Research is limited to six runs per ten minutes and forty per day per client. The print view selects the most useful sections for a compact handout; the full brief remains available on screen. PDF output uses the browser print dialog. Validated synthesis items stream as the model writes the brief. Saved briefs are not continuously refreshed.
 
 Recorded research snapshots are excluded from Git and uploaded separately with the hosted demo. A clean clone hides the example picker when no local recordings exist. Planning, research, design, screenshots and private environment files remain outside version control.
 

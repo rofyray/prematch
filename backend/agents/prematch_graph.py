@@ -1,9 +1,11 @@
 import asyncio
+import json
+from pydantic import ValidationError
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from backend.core import llm, search
 from backend.core.cache import store
-from backend.core.models import Candidates, Plan, Findings, Support, Brief
+from backend.core.models import Candidates, Plan, Findings, Support, Brief, Item, BriefNumber
 from backend.core.findings import research_window, clean_findings
 from backend.core.rerank import rerank
 from backend.core.citations import clean_brief
@@ -25,8 +27,8 @@ async def resolve(state):
     window = research_window(req.meeting_at)
     if req.entity:
         return {'entity':req.entity,'window':window,'clarify':False}
-    results = await search.search(req.subject,run)
-    candidates = await llm.call(run,'Cruyff','Resolve the requested company or person using search results. If ambiguous, list distinct likely candidates. Use only real entities in sources. Give confidence for each and the official domain when known. Sort most likely first.',
+    results = await search.search(req.subject+(' '+req.subject_type if req.subject_type != 'auto' else ''),run)
+    candidates = await llm.call(run,'Cruyff','Resolve the requested company or person using search results. Every candidate must be a real company or person matching the requested type; never include planets, elements or abstract topics. If a name has several plausible entities and context does not distinguish them, keep the top confidence below 0.75 and list distinct likely candidates. Use only real entities in sources. Give confidence for each and the official domain when known. Sort most likely first.',
                                 {'subject':req.subject,'type':req.subject_type,'sources':results},Candidates)
     await run.emit('entity.candidates',candidates=candidates.candidates)
     if not candidates.candidates:
@@ -106,8 +108,27 @@ async def investigate(state):
 
 async def synthesize(state):
     req,run,entity,window = state['request'],state['run'],state['entity'],state['window']
+    allowed = {sid for finding in state['findings'] for sid in finding.source_ids}
+    sent = {}
+    async def partial(snapshot):
+        for name in ('headline','numbers','what_changed','who_to_know','talking_points','questions','avoid'):
+            rows = snapshot.get(name)
+            if not isinstance(rows,list):
+                continue
+            valid = []
+            for row in rows:
+                try:
+                    item = (BriefNumber if name == 'numbers' else Item).model_validate(row)
+                    if item.source_ids and set(item.source_ids).issubset(allowed):
+                        valid.append(item.model_dump(mode='json'))
+                except ValidationError:
+                    continue
+            signature = json.dumps(valid,sort_keys=True)
+            if valid and sent.get(name) != signature:
+                sent[name] = signature
+                await run.emit('brief.section',name=name,content=valid)
     brief = await llm.call(run,'Golazo','Write a concise one-page meeting brief using ONLY the supplied findings. Three headline bullets, up to four numbers, three talking points, and three to five source-backed questions. Every item must have source_ids from its findings. Unconfirmed findings belong only in avoid. Keep the entire brief under 550 words. Tailor questions to the meeting purpose and context. Preserve verified/reported status.',
-                           {'entity':entity.model_dump(),'window':window.model_dump(mode='json'),'meeting_at':req.meeting_at,'with_person':req.with_person,'purpose':req.purpose,'my_context':req.my_context,'findings':[f.model_dump(mode='json') for f in state['findings']]},Brief)
+                           {'entity':entity.model_dump(),'window':window.model_dump(mode='json'),'meeting_at':req.meeting_at,'with_person':req.with_person,'purpose':req.purpose,'my_context':req.my_context,'findings':[f.model_dump(mode='json') for f in state['findings']]},Brief,on_partial=partial)
     brief.subject,brief.kind = entity.name,entity.kind
     brief.meeting_at,brief.with_person,brief.window = req.meeting_at,req.with_person,window
     used = {sid for finding in state['findings'] for sid in finding.source_ids}
