@@ -1,6 +1,7 @@
 "use client";
 import { useRef } from "react";
-import { X, ArrowUpRight } from "lucide-react";
+import { X } from "@phosphor-icons/react/dist/ssr/X";
+import { SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal";
 import type { Telemetry } from "../lib/types";
 export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -13,7 +14,8 @@ export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
         aria-haspopup="dialog"
         onClick={() => dialog.current?.showModal()}
       >
-        Under the hood <ArrowUpRight size={15} />
+        Run Details{" "}
+        <SlidersHorizontal weight="duotone" aria-hidden="true" size={15} />
       </button>
       <dialog
         ref={dialog}
@@ -25,13 +27,13 @@ export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
       >
         <div className="hood-inner">
           <div className="row between">
-            <h2>Under the hood</h2>
+            <h2>Run Details</h2>
             <button
               className="icon-button"
               aria-label="Close under the hood"
               onClick={() => dialog.current?.close()}
             >
-              <X />
+              <X weight="duotone" aria-hidden="true" />
             </button>
           </div>
           <p>How this research ran, step by step.</p>
@@ -42,7 +44,7 @@ export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
           ) : (
             <>
               <section>
-                <h3>This run</h3>
+                <h3>This Run</h3>
                 <ol className="calls">
                   {telemetry.calls.map((call, i) => (
                     <li key={i}>
@@ -69,14 +71,14 @@ export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
                 </ol>
               </section>
               <section>
-                <h3>Bifrost gateway</h3>
+                <h3>Bifrost Gateway</h3>
                 <dl className="metric-grid">
                   <div>
-                    <dt>Model calls</dt>
+                    <dt>Model Calls</dt>
                     <dd>{telemetry.bifrost.calls}</dd>
                   </div>
                   <div>
-                    <dt>Cache hits</dt>
+                    <dt>Cache Hits</dt>
                     <dd>{telemetry.bifrost.cache_hits}</dd>
                   </div>
                   <div>
@@ -84,7 +86,7 @@ export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
                     <dd>{telemetry.bifrost.fallbacks}</dd>
                   </div>
                   <div>
-                    <dt>Total time</dt>
+                    <dt>Total Time</dt>
                     <dd>{(telemetry.total_ms / 1000).toFixed(1)} s</dd>
                   </div>
                 </dl>
@@ -101,11 +103,11 @@ export default function Hood({ telemetry }: { telemetry?: Telemetry }) {
                     <dd>{telemetry.tavily.searches}</dd>
                   </div>
                   <div>
-                    <dt>Reused searches</dt>
+                    <dt>Reused Searches</dt>
                     <dd>{telemetry.tavily.cache_hits}</dd>
                   </div>
                   <div>
-                    <dt>Fetch mode</dt>
+                    <dt>Fetch Mode</dt>
                     <dd>
                       {telemetry.tavily.live
                         ? "Live"

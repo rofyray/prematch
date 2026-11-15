@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Mic, Square } from "lucide-react";
+import { Microphone as Mic } from "@phosphor-icons/react/dist/ssr/Microphone";
+import { Stop as Square } from "@phosphor-icons/react/dist/ssr/Stop";
 import type { WebSession } from "@omnidim-ai/client";
 export default function Voice({ briefId }: { briefId: string }) {
   const session = useRef<WebSession | null>(null);
@@ -49,7 +50,7 @@ export default function Voice({ briefId }: { briefId: string }) {
     }
   }
   return (
-    <section className="voice-bar" aria-label="Talk to your brief">
+    <section className="voice-bar" aria-label="Talk to Your Brief">
       <button
         className="mic-button"
         disabled={status === "connecting"}
@@ -65,10 +66,14 @@ export default function Voice({ briefId }: { briefId: string }) {
           } else void start();
         }}
       >
-        {status === "active" ? <Square size={21} /> : <Mic size={23} />}
+        {status === "active" ? (
+          <Square weight="duotone" aria-hidden="true" size={21} />
+        ) : (
+          <Mic weight="duotone" aria-hidden="true" size={23} />
+        )}
       </button>
       <div>
-        <b>Talk to your brief</b>
+        <b>Talk to Your Brief</b>
         <p>
           {status === "connecting"
             ? "Connecting to your brief coach…"

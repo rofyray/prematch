@@ -1,21 +1,20 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useReducer, useRef, useState } from "react";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  CalendarDays,
-  Flag,
-  Plus,
-  Radio,
-  Square,
-} from "lucide-react";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { CalendarDots as CalendarDays } from "@phosphor-icons/react/dist/ssr/CalendarDots";
+import { Flag } from "@phosphor-icons/react/dist/ssr/Flag";
+import { PlusCircle as Plus } from "@phosphor-icons/react/dist/ssr/PlusCircle";
+import { Broadcast as Radio } from "@phosphor-icons/react/dist/ssr/Broadcast";
+import { Stop as Square } from "@phosphor-icons/react/dist/ssr/Stop";
 import { initial, reduceBrief } from "./lib/reducer";
 import { postEvents } from "./lib/stream";
 import { replayExample, type Example } from "./lib/replay";
 import Examples from "./components/Examples";
 import type { Candidate } from "./lib/types";
 import BriefView from "./components/BriefView";
+import { FilePdf } from "@phosphor-icons/react/dist/ssr/FilePdf";
+import RunwayFlag from "./components/RunwayFlag";
 import Hood from "./components/Hood";
 import Voice from "./components/Voice";
 export default function Home() {
@@ -127,9 +126,9 @@ export default function Home() {
           <span className="header-caption">
             A little preparation goes a long way.
           </span>
-          <button className="secondary" onClick={reset}>
-            <Plus size={16} />
-            New brief
+          <button className="secondary new-brief" onClick={reset}>
+            <Plus weight="duotone" aria-hidden="true" size={16} />
+            New Brief
           </button>
         </div>
       </header>
@@ -139,7 +138,7 @@ export default function Home() {
             <section className="setup">
               <div className="intro">
                 <div className="eyebrow">
-                  <Flag size={15} />
+                  <Flag weight="duotone" aria-hidden="true" size={15} />
                   The last 30 days. Before the first hello.
                 </div>
                 <h1>
@@ -156,10 +155,10 @@ export default function Home() {
                   <span className="second-dot" />
                   <span className="third-dot" />
                   <span className="intro-flag">
-                    <Flag size={22} />
+                    <RunwayFlag />
                   </span>
                   <small>30 days of context</small>
-                  <b>Your meeting</b>
+                  <b>Your Meeting</b>
                 </div>
                 <Examples onSelect={replay} />
                 <div className="powered">
@@ -174,10 +173,10 @@ export default function Home() {
                 }}
               >
                 <div className="form-heading">
-                  <span className="eyebrow">Set up your brief</span>
-                  <CalendarDays size={20} />
+                  <span className="eyebrow">Set Up Your Brief</span>
+                  <CalendarDays weight="duotone" aria-hidden="true" size={20} />
                 </div>
-                <label htmlFor="subject">Company or person</label>
+                <label htmlFor="subject">Company or Person</label>
                 <input
                   id="subject"
                   required
@@ -195,13 +194,13 @@ export default function Home() {
                       value={kind}
                       onChange={(e) => setKind(e.target.value)}
                     >
-                      <option value="auto">Find the right match</option>
-                      <option value="company">A company</option>
-                      <option value="person">A person</option>
+                      <option value="auto">Find Match</option>
+                      <option value="company">Company</option>
+                      <option value="person">Person</option>
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="meeting">Meeting date and time</label>
+                    <label htmlFor="meeting">Meeting Date and Time</label>
                     <input
                       id="meeting"
                       type="datetime-local"
@@ -213,7 +212,7 @@ export default function Home() {
                 </div>
                 <p className="timezone">Meeting time in {zone}</p>
                 <fieldset className="purpose">
-                  <legend>What brings you together?</legend>
+                  <legend>Meeting Purpose</legend>
                   {["partnership", "sales", "investor", "hiring", "other"].map(
                     (p) => (
                       <label
@@ -234,9 +233,9 @@ export default function Home() {
                 </fieldset>
                 <details>
                   <summary>
-                    Add meeting context <span>(optional)</span>
+                    Add Context
                   </summary>
-                  <label htmlFor="person">Who are you meeting?</label>
+                  <label htmlFor="person">Meeting With</label>
                   <input
                     id="person"
                     value={person}
@@ -244,7 +243,7 @@ export default function Home() {
                     onChange={(e) => setPerson(e.target.value)}
                     placeholder="Name or role"
                   />
-                  <label htmlFor="context">What do you want to discuss?</label>
+                  <label htmlFor="context">Discussion Topics</label>
                   <textarea
                     id="context"
                     value={context}
@@ -258,8 +257,8 @@ export default function Home() {
                   className="primary build-button"
                   disabled={running}
                 >
-                  Build my brief
-                  <ArrowRight size={18} />
+                  Build Brief
+                  <ArrowRight weight="duotone" aria-hidden="true" size={18} />
                 </button>
                 <p className="form-note">
                   Public sources only. Saved briefs are available for 7 days.
@@ -268,21 +267,21 @@ export default function Home() {
             </section>
             <section className="preparation">
               <div>
-                <b>Context you can check.</b>
+                <b>Context You Can Check.</b>
                 <p>
                   Sources on every finding. Clear labels for what is verified,
                   reported, or still uncertain.
                 </p>
               </div>
               <div>
-                <b>Questions worth bringing.</b>
+                <b>Questions Worth Bringing.</b>
                 <p>
                   Talking points shaped around your meeting, with a one-page
                   brief to take along.
                 </p>
               </div>
               <div>
-                <b>Rehearse out loud.</b>
+                <b>Rehearse Out Loud.</b>
                 <p>
                   Talk through the brief with a voice coach before you join the
                   call.
@@ -294,7 +293,7 @@ export default function Home() {
           <>
             <div className="agent-strip" aria-live="polite">
               <span>
-                <Radio size={13} />
+                <Radio weight="duotone" aria-hidden="true" size={13} />
                 Cruyff · entity
               </span>
               <span>Assist · research plan</span>
@@ -309,7 +308,7 @@ export default function Home() {
               <section className="progress-panel">
                 <div className="row between">
                   <h2>
-                    <Radio size={19} />
+                    <Radio weight="duotone" aria-hidden="true" size={19} />
                     Getting you up to speed
                   </h2>
                   <button
@@ -325,7 +324,7 @@ export default function Home() {
                       });
                     }}
                   >
-                    <Square size={13} />
+                    <Square weight="duotone" aria-hidden="true" size={13} />
                     Stop
                   </button>
                 </div>
@@ -344,7 +343,11 @@ export default function Home() {
                 </div>
                 {Object.entries(state.partial).map(([name, items]) => (
                   <section key={name}>
-                    <h3>{name.replaceAll("_", " ")}</h3>
+                    <h3>
+                      {name
+                        .replaceAll("_", " ")
+                        .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                    </h3>
                     <ul>
                       {items.map((item, index) => (
                         <li key={index}>
@@ -372,18 +375,20 @@ export default function Home() {
                 <p>Choose the company or person you are meeting.</p>
                 <div>
                   {state.candidates.map((c) => (
-                    <button
-                      key={c.name + c.domain}
-                      onClick={() => void start(c)}
-                    >
+                    <article key={c.name + c.domain}>
                       <span className="eyebrow">{c.kind}</span>
                       <b>{c.name}</b>
                       <p>{c.description}</p>
-                      <span>
-                        {c.domain}
-                        <ArrowRight size={16} />
-                      </span>
-                    </button>
+                      <span>{c.domain}</span>
+                      <button onClick={() => void start(c)}>
+                        Select{" "}
+                        <ArrowRight
+                          weight="duotone"
+                          aria-hidden="true"
+                          size={16}
+                        />
+                      </button>
+                    </article>
                   ))}
                 </div>
               </section>
@@ -402,15 +407,19 @@ export default function Home() {
                         )
                       }
                     >
-                      Download one-pager (PDF)
-                      <ArrowUpRight size={15} />
+                      Download PDF
+                      <FilePdf weight="duotone" aria-hidden="true" size={18} />
                     </button>
                     <button className="secondary" onClick={share}>
-                      Share brief
+                      Share Brief
                     </button>
                     <a href={`/brief/${state.runId}`}>
-                      Open saved brief
-                      <ArrowUpRight size={14} />
+                      Open Brief
+                      <ArrowRight
+                        weight="duotone"
+                        aria-hidden="true"
+                        size={16}
+                      />
                     </a>
                   </div>
                 )}
@@ -423,7 +432,7 @@ export default function Home() {
         {state.error && (
           <div className="error" role="alert">
             <span>{state.error}</span>
-            <button onClick={() => setEditing(true)}>Edit and retry</button>
+            <button onClick={() => setEditing(true)}>Try Again</button>
           </div>
         )}
         {notice && (

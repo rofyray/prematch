@@ -1,4 +1,5 @@
 "use client";
+import { PlayCircle } from "@phosphor-icons/react/dist/ssr/PlayCircle";
 import { useEffect, useState } from "react";
 import type { Example } from "../lib/replay";
 export default function Examples({
@@ -31,7 +32,7 @@ export default function Examples({
   if (!items.length) return null;
   return (
     <div className="recorded-examples">
-      <span className="eyebrow">Watch a recorded example</span>
+      <span className="eyebrow">Recorded Examples</span>
       {items.map((item) => (
         <button
           className="example"
@@ -39,8 +40,16 @@ export default function Examples({
           key={item.id}
           onClick={() => void open(item.id)}
         >
-          {item.title}
-          <span aria-hidden="true">↗</span>
+          {(
+            {
+              "python-support": "Python Support",
+              "nextjs-release": "Next.js Release",
+              "copilot-pricing": "Copilot Pricing",
+              "nvidia-sales": "NVIDIA Brief",
+              "microsoft-partnership": "Microsoft Brief",
+            } as Record<string, string>
+          )[item.id] || "Play Example"}
+          <PlayCircle size={20} weight="duotone" aria-hidden="true" />
         </button>
       ))}
       <small>Recorded research. Replays without API calls.</small>

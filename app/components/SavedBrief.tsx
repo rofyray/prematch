@@ -1,4 +1,6 @@
 "use client";
+import { FilePdf } from "@phosphor-icons/react/dist/ssr/FilePdf";
+import { PlusCircle } from "@phosphor-icons/react/dist/ssr/PlusCircle";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Brief, Finding, Telemetry } from "../lib/types";
@@ -48,8 +50,9 @@ export default function SavedBrief({
           PreMatch
         </Link>
         <div className="row">
-          <Link href="/" className="secondary">
-            New brief
+          <Link href="/" className="secondary new-brief">
+            <PlusCircle size={18} weight="duotone" aria-hidden="true" /> New
+            Brief
           </Link>
           {data && (
             <button
@@ -64,7 +67,8 @@ export default function SavedBrief({
                     )
               }
             >
-              Download one-pager (PDF)
+              <FilePdf size={18} weight="duotone" aria-hidden="true" /> Download
+              PDF
             </button>
           )}
         </div>

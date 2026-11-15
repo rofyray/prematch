@@ -1,4 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
+import Runway from "./Runway";
+import { LinkSimple } from "@phosphor-icons/react/dist/ssr/LinkSimple";
 import type { Brief, Finding, Item, Source } from "../lib/types";
 import { safeUrl } from "../lib/stream";
 export function References({
@@ -45,112 +46,12 @@ function Items({
           {item.text} <References ids={item.source_ids} sources={sources} />
           {item.status && (
             <small className={`status-label ${item.status}`}>
-              {item.status === "reported" ? "Reported once" : item.status}
+              {item.status === "reported" ? "Reported Once" : item.status}
             </small>
           )}
         </li>
       ))}
     </Tag>
-  );
-}
-export function Runway({
-  brief,
-  findings,
-}: {
-  brief: Brief;
-  findings: Finding[];
-}) {
-  const start = Date.parse(brief.window.start),
-    end = Math.max(Date.parse(brief.meeting_at), Date.parse(brief.window.end));
-  const width = end - start || 1;
-  const milestones = [...findings]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .filter(
-      (f, i, all) => all.findIndex((other) => other.date === f.date) === i,
-    )
-    .slice(-4);
-  const position = (date: string) =>
-    Math.max(0, Math.min(92, ((Date.parse(date) - start) / width) * 92));
-  return (
-    <section className="runway-section" aria-label="30-day runway">
-      <div className="row between">
-        <h2 className="eyebrow">The 30-day runway</h2>
-        <div className="legend">
-          <span>━ Verified</span>
-          <span>┄ Reported once</span>
-          <span>┈ Unconfirmed</span>
-        </div>
-      </div>
-      <div className="runway-scroll">
-        <div className="runway runway-highlights">
-          <div className="runway-cards">
-            {milestones.map((f) => (
-              <div className={`event-card ${f.status}`} key={f.id}>
-                <time>{f.date}</time>
-                <b>{f.title}</b>
-                <References ids={f.source_ids} sources={brief.sources} />
-              </div>
-            ))}
-          </div>
-          <svg
-            className="runway-connectors"
-            viewBox="0 0 1000 90"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            {milestones.map((f, i) => (
-              <line
-                key={f.id}
-                x1={((i + 0.5) * 1000) / Math.max(1, milestones.length)}
-                y1="0"
-                x2={position(f.date) * 10}
-                y2="85"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeDasharray={
-                  f.status === "verified"
-                    ? undefined
-                    : f.status === "reported"
-                      ? "7 4"
-                      : "2 4"
-                }
-              />
-            ))}
-          </svg>
-          <div className="baseline" />
-          {milestones.map((f) => (
-            <span
-              className={`runway-dot ${f.status}`}
-              key={f.id}
-              style={{ left: `${position(f.date)}%` }}
-            />
-          ))}
-          {[0, 0.25, 0.5, 0.75].map((n) => (
-            <span
-              className="runway-tick"
-              style={{ left: `${n * 92}%` }}
-              key={n}
-            >
-              {new Date(start + width * n).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                timeZone: "UTC",
-              })}
-            </span>
-          ))}
-          <div className="meeting-flag">
-            <b>
-              Meeting ·{" "}
-              {new Date(brief.meeting_at).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              })}
-            </b>
-            <i />
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }
 export default function BriefView({
@@ -192,7 +93,7 @@ export default function BriefView({
     <div className={print ? "onepager" : "brief-view"}>
       <div className="brief-heading">
         <div className="eyebrow">
-          {print ? "PreMatch / Your meeting brief" : "Your pre-meeting brief"}
+          {print ? "PreMatch / Your meeting brief" : "Your Pre-meeting Brief"}
         </div>
         <h1>{brief.subject}</h1>
         <p>
@@ -209,13 +110,13 @@ export default function BriefView({
       {!print && <Runway brief={brief} findings={findings} />}
       {brief.headline.length > 0 && (
         <section className="headline">
-          <h2>The short version</h2>
+          <h2>The Short Version</h2>
           <Items items={brief.headline} sources={brief.sources} />
         </section>
       )}
       <section className="numbers-section">
         <h2>
-          <span>01</span> By the numbers
+          <span>01</span> By the Numbers
         </h2>
         <div className="numbers">
           {brief.numbers.map((n, i) => (
@@ -237,7 +138,7 @@ export default function BriefView({
       <div className="brief-grid">
         <section>
           <h2>
-            <span>02</span> What changed
+            <span>02</span> What Changed
           </h2>
           {brief.what_changed.length ? (
             <Items items={brief.what_changed} sources={brief.sources} />
@@ -247,7 +148,7 @@ export default function BriefView({
         </section>
         <section>
           <h2>
-            <span>03</span> Who to know
+            <span>03</span> Who to Know
           </h2>
           {brief.who_to_know.length ? (
             <Items items={brief.who_to_know} sources={brief.sources} />
@@ -256,19 +157,19 @@ export default function BriefView({
           )}
           {brief.avoid.length > 0 && (
             <>
-              <h3 className="rust">Leave alone</h3>
+              <h3 className="rust">Leave Alone</h3>
               <Items items={brief.avoid} sources={brief.sources} />
             </>
           )}
         </section>
         <section className="questions">
           <h2>
-            <span>04</span> What to ask
+            <span>04</span> What to Ask
           </h2>
           <Items items={brief.questions} sources={brief.sources} ordered />
           {brief.talking_points.length > 0 && (
             <>
-              <h3>Open with</h3>
+              <h3>Open With</h3>
               <Items items={brief.talking_points} sources={brief.sources} />
             </>
           )}
@@ -281,7 +182,7 @@ export default function BriefView({
             <li key={s.id}>
               <a href={safeUrl(s.url)} target="_blank" rel="noreferrer">
                 [{i + 1}] {s.title}
-                <ArrowUpRight size={12} />
+                <LinkSimple weight="duotone" aria-hidden="true" size={12} />
               </a>
               <small>
                 {s.domain} · {s.published_date || "Undated"}
