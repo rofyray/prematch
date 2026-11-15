@@ -369,20 +369,87 @@ details label {
 }
 .agent-strip {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px 20px;
-  padding: 16px 0;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0;
   border-bottom: 1px solid var(--line);
-  font: 11px var(--font-mono);
   color: var(--muted);
 }
-.agent-strip span {
-  display: inline-flex;
-  gap: 5px;
-  align-items: center;
+.agent-strip ol {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  flex: 1;
+  max-width: 920px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
-.agent-strip b {
+.agent-strip li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px;
+  border-left: 1px solid #bacbc4;
+  min-width: 0;
+}
+.agent-strip li:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.agent-strip li > svg {
+  flex: 0 0 auto;
+  color: var(--green);
+}
+.agent-strip li b {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.agent-strip li span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.agent-duration {
   margin-left: auto;
+  white-space: nowrap;
+  font: 10px var(--font-mono);
+}
+@media (max-width: 1050px) {
+  .agent-strip ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .agent-strip li:nth-child(3n + 1) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .agent-strip {
+    align-items: flex-end;
+  }
+}
+@media (max-width: 600px) {
+  .agent-strip {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .agent-strip ol {
+    flex-basis: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .agent-strip li {
+    padding: 0 12px;
+  }
+  .agent-strip li:nth-child(3n + 1) {
+    padding-left: 12px;
+    border-left: 1px solid #bacbc4;
+  }
+  .agent-strip li:nth-child(2n + 1) {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 .progress-panel {
   background: white;
@@ -958,10 +1025,6 @@ footer > .secondary {
   }
   .brief-heading p {
     font-size: 13px;
-  }
-  .agent-strip {
-    font-size: 10px;
-    gap: 10px 15px;
   }
   .brief-actions {
     gap: 8px;

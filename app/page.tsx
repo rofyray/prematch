@@ -7,6 +7,11 @@ import { Flag } from "@phosphor-icons/react/dist/ssr/Flag";
 import { PlusCircle as Plus } from "@phosphor-icons/react/dist/ssr/PlusCircle";
 import { Broadcast as Radio } from "@phosphor-icons/react/dist/ssr/Broadcast";
 import { Stop as Square } from "@phosphor-icons/react/dist/ssr/Stop";
+import { NumberCircleOne } from "@phosphor-icons/react/dist/ssr/NumberCircleOne";
+import { NumberCircleTwo } from "@phosphor-icons/react/dist/ssr/NumberCircleTwo";
+import { NumberCircleThree } from "@phosphor-icons/react/dist/ssr/NumberCircleThree";
+import { NumberCircleFour } from "@phosphor-icons/react/dist/ssr/NumberCircleFour";
+import { NumberCircleFive } from "@phosphor-icons/react/dist/ssr/NumberCircleFive";
 import { initial, reduceBrief } from "./lib/reducer";
 import { postEvents } from "./lib/stream";
 import { replayExample, type Example } from "./lib/replay";
@@ -17,6 +22,14 @@ import { FilePdf } from "@phosphor-icons/react/dist/ssr/FilePdf";
 import RunwayFlag from "./components/RunwayFlag";
 import Hood from "./components/Hood";
 import Voice from "./components/Voice";
+const agents = [
+  { name: "Cruyff", role: "Entity", Icon: NumberCircleOne },
+  { name: "Assist", role: "Research Plan", Icon: NumberCircleTwo },
+  { name: "Overlap", role: "Parallel Research", Icon: NumberCircleThree },
+  { name: "VAR", role: "Source Checks", Icon: NumberCircleFour },
+  { name: "Golazo", role: "Your Brief", Icon: NumberCircleFive },
+];
+
 export default function Home() {
   const [subject, setSubject] = useState("");
   const [kind, setKind] = useState("auto");
@@ -232,9 +245,7 @@ export default function Home() {
                   )}
                 </fieldset>
                 <details>
-                  <summary>
-                    Add Context
-                  </summary>
+                  <summary>Add Context</summary>
                   <label htmlFor="person">Meeting With</label>
                   <input
                     id="person"
@@ -291,17 +302,25 @@ export default function Home() {
           </>
         ) : (
           <>
-            <div className="agent-strip" aria-live="polite">
-              <span>
-                <Radio weight="duotone" aria-hidden="true" size={13} />
-                Cruyff · entity
-              </span>
-              <span>Assist · research plan</span>
-              <span>Overlap · parallel research</span>
-              <span>VAR · source checks</span>
-              <span>Golazo · your brief</span>
+            <div className="agent-strip">
+              <ol aria-label="Research agents in order">
+                {agents.map(({ name, role, Icon }) => (
+                  <li key={name}>
+                    <Icon size={28} weight="duotone" aria-hidden="true" />
+                    <div>
+                      <b>{name}</b>
+                      <span>{role}</span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
               {state.telemetry && (
-                <b>{(state.telemetry.total_ms / 1000).toFixed(1)} s</b>
+                <span
+                  className="agent-duration"
+                  aria-label="Total research time"
+                >
+                  {(state.telemetry.total_ms / 1000).toFixed(1)} s
+                </span>
               )}
             </div>
             {running && (
