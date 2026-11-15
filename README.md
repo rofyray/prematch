@@ -1,6 +1,6 @@
-# PreMatch
+# <img src="public/prematch-clock.svg" width="48" height="48" align="middle" alt=""> PreMatch
 
-[Open PreMatch](https://prematch-bay.vercel.app)
+[Open PreMatch](https://prematch-app.vercel.app/)
 
 PreMatch researches a company or person before a meeting. It turns the last thirty days of public evidence into a dated runway, useful numbers, talking points, questions, and a printable brief. A voice coach can rehearse the conversation using the saved brief.
 
