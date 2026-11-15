@@ -2,13 +2,14 @@
 import { PlayCircle } from "@phosphor-icons/react/dist/ssr/PlayCircle";
 import { useEffect, useState } from "react";
 import type { Example } from "../lib/replay";
+import { useToast } from "./Toast";
 export default function Examples({
   onSelect,
 }: {
   onSelect: (example: Example) => void;
 }) {
   const [items, setItems] = useState<{ id: string; title: string }[]>([]);
-  const [error, setError] = useState("");
+  const notify = useToast();
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     fetch("/examples/index.json")
@@ -18,13 +19,16 @@ export default function Examples({
   }, []);
   async function open(id: string) {
     setLoading(true);
-    setError("");
     try {
       const response = await fetch(`/examples/${encodeURIComponent(id)}.json`);
       if (!response.ok) throw new Error();
       onSelect(await response.json());
     } catch {
-      setError("This example could not be loaded. Please try again.");
+      notify({
+        tone: "error",
+        title: "Couldn’t load example",
+        message: "Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -40,20 +44,11 @@ export default function Examples({
           key={item.id}
           onClick={() => void open(item.id)}
         >
-          {(
-            {
-              "python-support": "Python Support",
-              "nextjs-release": "Next.js Release",
-              "copilot-pricing": "Copilot Pricing",
-              "nvidia-sales": "NVIDIA Brief",
-              "microsoft-partnership": "Microsoft Brief",
-            } as Record<string, string>
-          )[item.id] || "Play Example"}
+          {item.title}
           <PlayCircle size={20} weight="duotone" aria-hidden="true" />
         </button>
       ))}
       <small>Recorded research. Replays without API calls.</small>
-      {error && <p role="alert">{error}</p>}
     </div>
   );
 }

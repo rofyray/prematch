@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastProvider } from "./components/Toast";
 import {
   DM_Sans,
   DM_Mono,
@@ -45,7 +46,7 @@ export default function RootLayout({
       <body
         className={`${display.variable} ${body.variable} ${mono.variable} ${serif.variable} ${print.variable}`}
       >
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

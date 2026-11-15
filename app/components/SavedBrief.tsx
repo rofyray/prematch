@@ -7,6 +7,7 @@ import type { Brief, Finding, Telemetry } from "../lib/types";
 import BriefView from "./BriefView";
 import Hood from "./Hood";
 import Voice from "./Voice";
+import ShareBrief from "./ShareBrief";
 export default function SavedBrief({
   id,
   print = false,
@@ -71,6 +72,7 @@ export default function SavedBrief({
               PDF
             </button>
           )}
+          {data && !print && <ShareBrief briefId={id} />}
         </div>
       </header>
       <main className={print ? "print-shell" : ""}>

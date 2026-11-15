@@ -22,6 +22,8 @@ import { FilePdf } from "@phosphor-icons/react/dist/ssr/FilePdf";
 import RunwayFlag from "./components/RunwayFlag";
 import Hood from "./components/Hood";
 import Voice from "./components/Voice";
+import ShareBrief from "./components/ShareBrief";
+import { useToast } from "./components/Toast";
 const agents = [
   { name: "Cruyff", role: "Entity", Icon: NumberCircleOne },
   { name: "Assist", role: "Research Plan", Icon: NumberCircleTwo },
@@ -40,7 +42,7 @@ export default function Home() {
   const [context, setContext] = useState("");
   const [state, dispatch] = useReducer(reduceBrief, initial);
   const [editing, setEditing] = useState(true);
-  const [notice, setNotice] = useState("");
+  const notify = useToast();
   const [replaying, setReplaying] = useState(false);
   const abort = useRef<AbortController | null>(null);
   useEffect(() => {
@@ -62,7 +64,6 @@ export default function Home() {
     abort.current = controller;
     dispatch({ type: "reset", data: {} });
     setEditing(false);
-    setNotice("");
     try {
       await postEvents(
         "/api/py/brief",
@@ -98,9 +99,11 @@ export default function Home() {
     dispatch({ type: "reset", data: {} });
     setReplaying(true);
     setEditing(false);
-    setNotice(
-      `Recorded example from ${new Date(example.recorded_at).toLocaleDateString()}. No live searches are running.`,
-    );
+    notify({
+      tone: "info",
+      title: "Playing recorded brief",
+      message: `Recorded ${new Date(example.recorded_at).toLocaleDateString()}. No live searches are running.`,
+    });
     setSubject(String(example.input.subject));
     await replayExample(example, dispatch, controller.signal);
   }
@@ -110,18 +113,6 @@ export default function Home() {
     dispatch({ type: "reset", data: {} });
     dispatch({ type: "run.completed", data: {} });
     setEditing(true);
-  }
-  async function share() {
-    try {
-      await navigator.clipboard.writeText(
-        `${location.origin}/brief/${state.runId}`,
-      );
-      setNotice("Share link copied. It works for 7 days.");
-    } catch {
-      setNotice(
-        "The link could not be copied. Open the saved brief to copy its address.",
-      );
-    }
   }
   return (
     <>
@@ -146,6 +137,11 @@ export default function Home() {
         </div>
       </header>
       <main>
+        {replaying && (
+          <p className="recorded-notice">
+            Recorded Example · Replays without live searches.
+          </p>
+        )}
         {editing ? (
           <>
             <section className="setup">
@@ -429,9 +425,7 @@ export default function Home() {
                       Download PDF
                       <FilePdf weight="duotone" aria-hidden="true" size={18} />
                     </button>
-                    <button className="secondary" onClick={share}>
-                      Share Brief
-                    </button>
+                    {state.runId && <ShareBrief briefId={state.runId} />}
                     <a href={`/brief/${state.runId}`}>
                       Open Brief
                       <ArrowRight
@@ -453,11 +447,6 @@ export default function Home() {
             <span>{state.error}</span>
             <button onClick={() => setEditing(true)}>Try Again</button>
           </div>
-        )}
-        {notice && (
-          <p className="notice" role="status">
-            {notice}
-          </p>
         )}
       </main>
       <footer>
