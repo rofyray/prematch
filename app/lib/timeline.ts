@@ -25,7 +25,7 @@ export function layoutTimeline(
     const ratio = Number.isFinite(parsed)
       ? Math.max(0, Math.min(1, (parsed - start) / Math.max(1, end - start)))
       : 0;
-    const dot = inset + ratio * (width - reserve - inset);
+    const dot = inset + ratio * (width - 32 - inset);
     let lane = 0,
       column = 0;
     const choices = Array.from({ length: columns }, (_, i) => i).sort(

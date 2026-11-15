@@ -198,7 +198,7 @@ export default function Runway({
           <time
             key={n}
             className="runway-date"
-            style={{ left: 8 + n * (width - 80), top: layout.axis + 12 }}
+            style={{ left: 8 + n * (width - 40), top: layout.axis + 12 }}
           >
             {dateLabel(start + (end - start) * n)}
           </time>

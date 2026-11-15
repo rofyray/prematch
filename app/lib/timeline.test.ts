@@ -34,14 +34,14 @@ describe("runway packing", () => {
   }
   it("handles no updates, dates outside the window, and invalid dates", () => {
     expect(layoutTimeline([], start, end, 390).height).toBeGreaterThan(0);
-    const { items } = layoutTimeline(
+    const { items, flagX } = layoutTimeline(
       ["2020-01-01", "2030-01-01", "unknown"],
       start,
       end,
       390,
     );
     expect(items[0].dot).toBe(8);
-    expect(items[1].dot).toBe(318);
+    expect(items[1].dot).toBe(flagX + 2);
     expect(Number.isFinite(items[2].dot)).toBe(true);
   });
 });
