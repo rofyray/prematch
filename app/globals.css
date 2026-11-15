@@ -229,15 +229,17 @@ main {
   bottom: 0;
   background: none;
   border-radius: 0;
-  border-left: 2px solid var(--rust);
-  height: 90px;
-  width: 28px;
+  border: 0;
+  height: 100px;
+  width: 30px;
   color: var(--rust);
 }
 .intro-flag svg {
-  position: relative;
-  left: -1px;
-  top: -3px;
+  position: static;
+  display: block;
+  width: 30px;
+  height: 100%;
+  overflow: visible;
 }
 .intro-runway small,
 .intro-runway b {
@@ -1203,18 +1205,6 @@ footer > .secondary {
 }
 .header .new-brief:hover {
   background: #cbded5;
-}
-.intro-runway .intro-flag {
-  border: 0;
-  height: 100px;
-  width: 30px;
-}
-.intro-flag svg {
-  position: static;
-  display: block;
-  width: 30px;
-  height: 100%;
-  overflow: visible;
 }
 .runway-map {
   position: relative;
