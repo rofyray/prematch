@@ -14,8 +14,6 @@ PreMatch researches a company or person before a meeting. It turns the last thir
 
 https://github.com/user-attachments/assets/e46f0f71-293c-4d73-aaf1-6bfc03697380
 
-*1:51 walkthrough · 1080p with audio*
-
 ## How it works
 
 ```mermaid
