@@ -1,8 +1,20 @@
-# <img src="public/prematch-logo.svg" width="48" height="48" align="absmiddle" alt=""> PreMatch
+<h1 align="center">
+  <img src="public/prematch-logo.svg" width="48" height="48" align="absmiddle" alt=""> PreMatch
+</h1>
 
-[Open PreMatch](https://prematch-app.vercel.app/)
+<p align="center">
+  <a href="https://prematch-app.vercel.app/">Open PreMatch</a>
+  &nbsp;·&nbsp;
+  <a href="presentations/prematch-pitch-deck.pdf">Pitch Deck (PDF)</a>
+</p>
 
 PreMatch researches a company or person before a meeting. It turns the last thirty days of public evidence into a dated runway, useful numbers, talking points, questions, and a printable brief. A voice coach can rehearse the conversation using the saved brief.
+
+## Demo
+
+https://github.com/user-attachments/assets/e46f0f71-293c-4d73-aaf1-6bfc03697380
+
+*1:51 walkthrough · 1080p with audio*
 
 ## How it works
 
